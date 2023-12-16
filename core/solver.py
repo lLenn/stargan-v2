@@ -18,11 +18,11 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from core.model import build_model
-from core.checkpoint import CheckpointIO
-from core.data_loader import InputFetcher
-import core.utils as utils
-from metrics.eval import calculate_metrics
+from .model import build_model
+from .checkpoint import CheckpointIO
+from .data_loader import InputFetcher
+import .utils as utils
+from ..metrics.eval import calculate_metrics
 
 
 class Solver(nn.Module):
