@@ -21,7 +21,7 @@ import torch.nn.functional as F
 from .model import build_model
 from .checkpoint import CheckpointIO
 from .data_loader import InputFetcher
-import .utils as utils
+from .utils import print_network, he_init, debug_image, translate_using_reference, video_ref
 from ..metrics.eval import calculate_metrics
 
 
@@ -34,7 +34,7 @@ class Solver(nn.Module):
         self.nets, self.nets_ema = build_model(args)
         # below setattrs are to make networks be children of Solver, e.g., for self.to(self.device)
         for name, module in self.nets.items():
-            utils.print_network(module, name)
+            print_network(module, name)
             setattr(self, name, module)
         for name, module in self.nets_ema.items():
             setattr(self, name + '_ema', module)
@@ -62,7 +62,7 @@ class Solver(nn.Module):
             # Do not initialize the FAN parameters
             if ('ema' not in name) and ('fan' not in name):
                 print('Initializing %s...' % name)
-                network.apply(utils.he_init)
+                network.apply(he_init)
 
     def _save_checkpoint(self, step):
         for ckptio in self.ckptios:
@@ -159,7 +159,7 @@ class Solver(nn.Module):
             # generate images for debugging
             if (i+1) % args.sample_every == 0:
                 os.makedirs(args.sample_dir, exist_ok=True)
-                utils.debug_image(nets_ema, args, inputs=inputs_val, step=i+1)
+                debug_image(nets_ema, args, inputs=inputs_val, step=i+1)
 
             # save model checkpoints
             if (i+1) % args.save_every == 0:
@@ -182,11 +182,11 @@ class Solver(nn.Module):
 
         fname = ospj(args.result_dir, 'reference.jpg')
         print('Working on {}...'.format(fname))
-        utils.translate_using_reference(nets_ema, args, src.x, ref.x, ref.y, fname)
+        translate_using_reference(nets_ema, args, src.x, ref.x, ref.y, fname)
 
         fname = ospj(args.result_dir, 'video_ref.mp4')
         print('Working on {}...'.format(fname))
-        utils.video_ref(nets_ema, args, src.x, ref.x, ref.y, fname)
+        video_ref(nets_ema, args, src.x, ref.x, ref.y, fname)
 
     @torch.no_grad()
     def evaluate(self):
