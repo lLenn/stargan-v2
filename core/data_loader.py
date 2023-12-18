@@ -77,26 +77,29 @@ class ReferenceDataset(data.Dataset):
     def __len__(self):
         return len(self.targets)
 
+class RandomCrop(torch.nn.Module):
+    def __init__(self, img_size, prob):
+        super().__init__()
+        self.prob = prob
+        self.crop = transforms.RandomResizedCrop(img_size, scale=[0.8, 1.0], ratio=[0.9, 1.1])
 
+    def forward(self, tensor):
+        return self.crop(tensor) if random.random() < self.prob else tensor
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}(prob={self.prob})"
+    
 def _make_balanced_sampler(labels):
     class_counts = np.bincount(labels)
     class_weights = 1. / class_counts
     weights = class_weights[labels]
     return WeightedRandomSampler(weights, len(weights))
 
-
-def get_train_loader(root, which='source', img_size=256,
-                     batch_size=8, prob=0.5, num_workers=4):
-    print('Preparing DataLoader to fetch %s images '
-          'during the training phase...' % which)
-
-    crop = transforms.RandomResizedCrop(
-        img_size, scale=[0.8, 1.0], ratio=[0.9, 1.1])
-    rand_crop = transforms.Lambda(
-        lambda x: crop(x) if random.random() < prob else x)
-
+def get_train_loader(root, which='source', img_size=256, batch_size=8, prob=0.5, num_workers=4):
+    print('Preparing DataLoader to fetch %s images during the training phase...' % which)
+    
     transform = transforms.Compose([
-        rand_crop,
+        RandomCrop(img_size, prob),
         transforms.Resize([img_size, img_size]),
         transforms.RandomHorizontalFlip(),
         transforms.ToTensor(),
