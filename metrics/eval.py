@@ -67,7 +67,7 @@ def calculate_metrics(nets, args, step, mode):
 
                 # generate 10 outputs from the same input
                 group_of_images = []
-                for j in range(args.num_outs_per_domain):
+                for j in range(10):
                     if mode == 'latent':
                         z_trg = torch.randn(N, args.latent_dim).to(device)
                         s_trg = nets.mapping_network(z_trg, y_trg)
