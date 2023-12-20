@@ -8,6 +8,7 @@ http://creativecommons.org/licenses/by-nc/4.0/ or send a letter to
 Creative Commons, PO Box 1866, Mountain View, CA 94042, USA.
 """
 
+import os
 import torch
 import torch.nn as nn
 from torchvision import models
@@ -60,11 +61,11 @@ class LPIPS(nn.Module):
 
     def _load_lpips_weights(self):
         own_state_dict = self.state_dict()
+        chkpt_path = os.path.join(os.path.dirname(__file__), 'lpips_weights.ckpt')
         if torch.cuda.is_available():
-            state_dict = torch.load('metrics/lpips_weights.ckpt')
+            state_dict = torch.load(chkpt_path)
         else:
-            state_dict = torch.load('metrics/lpips_weights.ckpt',
-                                    map_location=torch.device('cpu'))
+            state_dict = torch.load(chkpt_path, map_location=torch.device('cpu'))
         for name, param in state_dict.items():
             if name in own_state_dict:
                 own_state_dict[name].copy_(param)
